@@ -21,6 +21,12 @@ Kontonr: #{ACCOUNT_NUMBER}
 Orgnr: 123123123
 E-post: foo@foo.com")
 
+      draw_invoice_info([
+          ["Fakturanr", "10"],
+          ["Fakturadato", "22.08.1986"],
+          ["Forfallsdato", "05.09.1986"]
+        ])
+
       draw_lines(@invoice["lines"])
 
       @pdf.fill_color "FDFA76"
@@ -33,8 +39,31 @@ E-post: foo@foo.com")
       @pdf.render
     end
 
+    def draw_invoice_info(lines)
+      @pdf.font_size 9
+      left_col_max = lines.collect { |line| @pdf.width_of(line[0], :style => :bold) }.max
+      right_col_max = lines.collect { |line| @pdf.width_of(line[1]) }.max
+      col_spacing = 20
+
+      invoice_info_box = @pdf.bounding_box([@pdf.bounds.width - left_col_max - right_col_max - col_spacing - 10, @pdf.bounds.height - 10], :width => left_col_max + col_spacing + right_col_max) do
+        left_col_box = @pdf.bounding_box([0, 0], :width => left_col_max) do
+          lines.each do |line|
+            @pdf.text "#{line[0]}", :style => :bold, :align => :right
+          end
+        end
+
+        @pdf.bounding_box([left_col_max + col_spacing, left_col_box.height], :width => right_col_max) do
+          lines.each do |line|
+            @pdf.text "#{line[1]}", :align => :left
+          end
+        end
+      end
+
+      # @pdf.move_down invoice_info_box.height
+    end
+
     def draw_lines(lines)
-      @pdf.bounding_box([120, @pdf.bounds.height - 10], :width => @pdf.bounds.width - 130) do
+      @pdf.bounding_box([120, @pdf.cursor - 10], :width => @pdf.bounds.width - 130) do
         @pdf.font_size 9
         @pdf.table(
           [["Antall", "Produktnr", "Beskrivelse", "Enhetspris", "MVA"]].concat(lines.collect do |line|
