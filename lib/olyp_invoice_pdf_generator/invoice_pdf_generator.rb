@@ -95,8 +95,8 @@ E-post: foo@foo.com")
       pdf.bounding_box([10, pdf.cursor - 10], :width => width) do
         pdf.font_size 9
 
-        table_lines = [["Antall", "Produktnr", "Beskrivelse", "Enhetspris", "MVA"]].concat(lines.collect do |line|
-            [line["quantity"], line["product_code"], line["description"], get_line_price_text(line), get_line_tax_text(line)]
+        table_lines = [["Antall", "Produktnr", "Beskrivelse", "Enhetspris", "MVA", "Sum"]].concat(lines.collect do |line|
+            [line["quantity"], line["product_code"], line["description"], get_line_price_text(line), get_line_tax_text(line), get_line_sum_text(line)]
           end)
 
         description_col_idx = 2
