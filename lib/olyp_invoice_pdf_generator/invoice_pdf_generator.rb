@@ -14,7 +14,7 @@ module OlypInvoicePdfGenerator
     def render
       pdf = Prawn::Document.new(:margin => [0, 0], :page_size => "A4")
 
-      draw_contact_info(pdf, "Olyp AS", "Gateveien 14
+      contact_info_height = draw_contact_info(pdf, "Olyp AS", "Gateveien 14
 1414 Oslo
 NORGE",
       "Tlf: 12312312
@@ -22,11 +22,13 @@ Kontonr: #{ACCOUNT_NUMBER}
 Orgnr: 123123123
 E-post: foo@foo.com")
 
-      draw_invoice_info(pdf, [
+      invoice_info_height = draw_invoice_info(pdf, [
           ["Fakturanr", "10"],
           ["Fakturadato", "22.08.1986"],
           ["Forfallsdato", "05.09.1986"]
         ])
+
+      pdf.move_down [contact_info_height, invoice_info_height].max
 
       draw_lines(pdf, @invoice["lines"])
 
@@ -61,19 +63,42 @@ E-post: foo@foo.com")
       end
 
       # @pdf.move_down invoice_info_box.height
+
+      return invoice_info_box.height
+    end
+
+    def get_line_tax_text(line)
+      "#{line["tax"]}%"
+    end
+
+    def get_line_price_text(line)
+      "%.2f" % BigDecimal.new(line["unit_price"])
     end
 
     def draw_lines(pdf, lines)
-      pdf.bounding_box([120, pdf.cursor - 10], :width => pdf.bounds.width - 130) do
+      width = pdf.bounds.width - 20
+      padding = 5
+
+      pdf.bounding_box([10, pdf.cursor - 10], :width => width) do
         pdf.font_size 9
+
+        table_lines = [["Antall", "Produktnr", "Beskrivelse", "Enhetspris", "MVA"]].concat(lines.collect do |line|
+            [line["quantity"], line["product_code"], line["description"], get_line_price_text(line), get_line_tax_text(line)]
+          end)
+
+        quantity_width = table_lines.collect {|line| pdf.width_of(line[0], :style => :bold) }.max + (padding * 2)
+        product_code_width = table_lines.collect {|line| pdf.width_of(line[1], :style => :bold) }.max + (padding * 2)
+        unit_price_width = table_lines.collect {|line| pdf.width_of(line[3], :style => :bold) }.max + (padding * 2)
+        tax_width = table_lines.collect {|line| pdf.width_of(line[4] , :style => :bold) }.max + (padding * 2)
+        description_width = width - quantity_width - product_code_width - unit_price_width - tax_width
+
         pdf.table(
-          [["Antall", "Produktnr", "Beskrivelse", "Enhetspris", "MVA"]].concat(lines.collect do |line|
-              [line["quantity"], line["product_code"], line["description"], "%.2f" % BigDecimal.new(line["unit_price"]), "#{line["tax"]}%"]
-            end),
-          :column_widths  => [50, 60, 220, 70, 40],
+          table_lines,
+          :column_widths  => [quantity_width, product_code_width, description_width, unit_price_width, tax_width],
           :cell_style => {:border_width => 1, :border_color => "dddddd"}) do
           row(0).font_style = :bold
           row(0).background_color = "dddddd"
+          rows(0..-1).style(:padding => padding)
         end
       end
     end
@@ -81,13 +106,25 @@ E-post: foo@foo.com")
     def draw_contact_info(pdf, header, address, contact_info)
       pdf.fill_color "000000"
 
-      pdf.bounding_box([10, pdf.bounds.height - 10], :width => pdf.bounds.width - 20, :height => pdf.bounds.height - 20) do
-        pdf.text header, :style => :bold, :size => 11
+      header_style = {:style => :bold, :size => 11}
+      address_style = {:size => 10}
+      contact_info_style = {:size => 9}
+
+      box_width = [
+        pdf.width_of(header, header_style),
+        pdf.width_of(address, address_style),
+        pdf.width_of(contact_info, contact_info_style)
+      ].max
+
+      contact_info_box = pdf.bounding_box([10, pdf.bounds.height - 10], :width => box_width) do
+        pdf.text header, header_style
         pdf.move_down 10
-        pdf.text address, :size => 10
+        pdf.text address, address_style
         pdf.move_down 10
-        pdf.text contact_info, :size => 9
+        pdf.text contact_info, contact_info_style
       end
+
+      return contact_info_box.height
     end
 
     def draw_price_and_account_number(pdf, start_x, y, price_base, price_fraction, account_number)
