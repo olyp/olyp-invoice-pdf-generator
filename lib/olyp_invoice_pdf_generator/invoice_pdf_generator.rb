@@ -143,6 +143,8 @@ E-post: foo@foo.com")
       ].max
 
       contact_info_box = pdf.bounding_box([10, pdf.bounds.height - 10], :width => box_width) do
+        pdf.image File.dirname(__FILE__) + "/olyp_logo.png", :width => 200
+        pdf.move_down 20
         pdf.text header, header_style
         pdf.move_down 10
         pdf.text address, address_style
