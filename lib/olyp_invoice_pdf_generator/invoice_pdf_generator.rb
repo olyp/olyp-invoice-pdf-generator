@@ -2,6 +2,7 @@
 require "prawn"
 require "prawn/table"
 require "bigdecimal"
+require "date"
 
 module OlypInvoicePdfGenerator
   class InvoicePdfGenerator
@@ -23,9 +24,10 @@ Orgnr: 123123123
 E-post: foo@foo.com")
 
       invoice_info_height = draw_invoice_info(pdf, [
-          ["Fakturanr", "10"],
-          ["Fakturadato", "22.08.1986"],
-          ["Forfallsdato", "05.09.1986"]
+          ["Fakturanr", "#{@invoice["invoice_number"]}"],
+          ["Fakturadato", format_date(@invoice["invoice_date"])],
+          ["Forfallsdato", format_date(@invoice["due_date"])],
+          ["Sendt til", @invoice["customer"]["name"]]
         ])
 
       pdf.move_down [contact_info_height, invoice_info_height].max
@@ -50,6 +52,10 @@ E-post: foo@foo.com")
       draw_price_and_account_number(pdf, 200, 65, price[0], price[2], ACCOUNT_NUMBER)
 
       pdf.render
+    end
+
+    def format_date(date)
+      Date.parse(date).strftime("%d.%m.%Y")
     end
 
     def draw_invoice_info(pdf, lines)
