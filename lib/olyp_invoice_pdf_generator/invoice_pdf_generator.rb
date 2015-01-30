@@ -31,6 +31,12 @@ E-post: post@olyp.no")
 
       pdf.move_down [contact_info_height, invoice_info_height].max
 
+      if @invoice["text"] != nil
+        pdf.bounding_box([20, pdf.cursor], :width => pdf.bounds.width - 40) do
+          pdf.text @invoice["text"]
+        end
+      end
+
       draw_lines(pdf, @invoice["lines"])
 
       pdf.move_down 10
