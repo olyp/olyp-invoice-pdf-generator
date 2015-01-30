@@ -6,7 +6,7 @@ require "date"
 
 module OlypInvoicePdfGenerator
   class InvoicePdfGenerator
-    ACCOUNT_NUMBER = "0539.08.57553"
+    ACCOUNT_NUMBER = "1503.49.10488"
 
     def initialize(invoice)
       @invoice = invoice
@@ -15,13 +15,12 @@ module OlypInvoicePdfGenerator
     def render
       pdf = Prawn::Document.new(:margin => [0, 0], :page_size => "A4")
 
-      contact_info_height = draw_contact_info(pdf, "Olyp AS", "Gateveien 14
-1414 Oslo
+      contact_info_height = draw_contact_info(pdf, "Oslo Lydproduksjon AS", "Trondheimsveien 42A
+0560 Oslo
 NORGE",
-      "Tlf: 12312312
-Kontonr: #{ACCOUNT_NUMBER}
-Orgnr: 123123123
-E-post: foo@foo.com")
+      "Kontonr: #{ACCOUNT_NUMBER}
+Orgnr: 912 443 760
+E-post: post@olyp.no")
 
       invoice_info_height = draw_invoice_info(pdf, [
           ["Fakturanr", "#{@invoice["invoice_number"]}"],
