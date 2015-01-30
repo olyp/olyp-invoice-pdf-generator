@@ -75,6 +75,10 @@ E-post: foo@foo.com")
       "%.2f" % BigDecimal.new(line["unit_price"])
     end
 
+    def get_line_sum_text(line)
+      "%.2f" % BigDecimal.new(line["sum_without_tax"])
+    end
+
     def draw_lines(pdf, lines)
       width = pdf.bounds.width - 20
       padding = 5
@@ -86,15 +90,21 @@ E-post: foo@foo.com")
             [line["quantity"], line["product_code"], line["description"], get_line_price_text(line), get_line_tax_text(line)]
           end)
 
-        quantity_width = table_lines.collect {|line| pdf.width_of(line[0], :style => :bold) }.max + (padding * 2)
-        product_code_width = table_lines.collect {|line| pdf.width_of(line[1], :style => :bold) }.max + (padding * 2)
-        unit_price_width = table_lines.collect {|line| pdf.width_of(line[3], :style => :bold) }.max + (padding * 2)
-        tax_width = table_lines.collect {|line| pdf.width_of(line[4] , :style => :bold) }.max + (padding * 2)
-        description_width = width - quantity_width - product_code_width - unit_price_width - tax_width
+        description_col_idx = 2
+        num_cols = table_lines[0].length
+
+        computed_col_widths = (0..num_cols).collect {|i| table_lines.collect { |line| pdf.width_of(line[i] || "", :style => :bold)}.max + (padding * 2) }
+
+        total_col_widths_except_description = computed_col_widths.clone
+        total_col_widths_except_description.delete_at(description_col_idx)
+        total_col_widths_except_description = total_col_widths_except_description.inject {|sum, x| sum + x}
+
+        col_widths = computed_col_widths.clone
+        col_widths[description_col_idx] = width - total_col_widths_except_description
 
         pdf.table(
           table_lines,
-          :column_widths  => [quantity_width, product_code_width, description_width, unit_price_width, tax_width],
+          :column_widths  => col_widths,
           :cell_style => {:border_width => 1, :border_color => "dddddd"}) do
           row(0).font_style = :bold
           row(0).background_color = "dddddd"
