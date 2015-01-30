@@ -32,6 +32,15 @@ E-post: foo@foo.com")
 
       draw_lines(pdf, @invoice["lines"])
 
+      pdf.move_down 10
+
+      pdf.bounding_box([10, pdf.cursor], :width => pdf.bounds.width - 20) do
+        pdf.text "Sum eks. MVA: #{"%.2f" % @invoice["sum_without_tax"]}"
+        pdf.text "Total MVA: #{"%.2f" % @invoice["total_tax"]}"
+        pdf.move_down 5
+        pdf.text "Sum inkl. MVA: #{"%.2f" % @invoice["sum_with_tax"]}"
+      end
+
       pdf.fill_color "FDFA76"
       pdf.fill_rectangle [0, 100], pdf.bounds.width, 80
       pdf.fill_color "FFFFFF"
