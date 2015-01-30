@@ -46,7 +46,8 @@ E-post: foo@foo.com")
       pdf.fill_color "FFFFFF"
       pdf.fill_rectangle [0, 75], pdf.bounds.width, 50
 
-      draw_price_and_account_number(pdf, 200, 65, "149", "00", ACCOUNT_NUMBER)
+      price = ("%.2f" % @invoice["sum_with_tax"]).split(".")
+      draw_price_and_account_number(pdf, 200, 65, price[0], price[1], ACCOUNT_NUMBER)
 
       pdf.render
     end
